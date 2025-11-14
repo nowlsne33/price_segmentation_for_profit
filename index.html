@@ -616,12 +616,11 @@
           menuSegments,
           metrics,
         ] = await Promise.all([
-          loadCSV("data/customer_price_elasticity_report.csv"),
-          loadCSV("data/aggregate_elasticity_curve.csv"),
-          loadCSV("data/price_menu_segments.csv"),
-          loadJSON("data/model_metrics.json"),
+          loadCSV("customer_price_elasticity_report.csv"),
+          loadCSV("aggregate_elasticity_curve.csv"),
+          loadCSV("price_menu_segments.csv"),
+          loadJSON("model_metrics.json"),
         ]);
-
         statusEl.textContent = "데이터 로딩 완료";
 
         // 1) 고객 테이블
@@ -830,3 +829,4 @@
   </script>
 </body>
 </html>
+
