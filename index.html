@@ -357,7 +357,7 @@
           <h2>가격–수요 곡선과 탄력성 분석</h2>
           <div class="card-subtitle">
             DNN이 예측한 구매 확률을 이용해 개별 고객 수준과 전체 수준에서
-            가격–구매 확률, 가격 탄력성, 총 이윤 곡선을 시각화합니다.
+            가격–구매 확률, 가격 탄력성, 총 이윤 곡선을 시각화 한 결과입니다. 
           </div>
         </div>
         <div class="pill">
@@ -371,8 +371,8 @@
           <h3>제시 가격 vs. 구매 확률 (개별 고객)</h3>
           <canvas id="custProbChart"></canvas>
           <p class="small-note">
-            Colab 코드에서 <code>provided_price</code>와 <code>purchase_probability</code>를 이용해
-            “현재 가격에서의 수요 수준”을 시각화한 산점도입니다.
+            Colab 코드에서 정의된 가격 차별과 구매 확률 함수를 이용해
+            "현재 가격에서의 수요 수준"을 시각화한 산점도입니다.
           </p>
         </div>
         <div class="chart-wrapper">
@@ -389,7 +389,7 @@
 
       <div class="grid grid-3">
         <div class="chart-wrapper">
-          <h3>집계 수요 곡선 (Q_mean)</h3>
+          <h3>집계 수요 곡선 (Q-mean)</h3>
           <canvas id="aggDemandChart"></canvas>
         </div>
         <div class="chart-wrapper">
@@ -409,13 +409,13 @@
         <div class="card-title-wrap">
           <h2>3-Tier 가격 메뉴 전략</h2>
           <div class="card-subtitle">
-            Colab 코드 마지막 부분의 절대 탄력성 기준 tertile 분할(SEG0~2)과
-            각 세그먼트별 최적 메뉴 가격·평균 구매 확률·평균 이윤을 요약했습니다.
+            가격 차별 이론을 적용해 절대 탄력성 기준으로 3개의 단계로 소비자군을 구분하고
+            각 단계별 최적 가격·평균 구매 확률·평균 이윤을 요약했습니다.
           </div>
         </div>
         <div class="pill">
           <span class="pill-dot"></span>
-          <span>elasticity-based 3-tier menu</span>
+          <span>elasticity-based 3-phase price segmentation</span>
         </div>
       </div>
 
@@ -426,7 +426,7 @@
               <tr>
                 <th>Segment</th>
                 <th>고객 수</th>
-                <th>메뉴 가격</th>
+                <th>상품 가격</th>
                 <th>평균 구매확률</th>
                 <th>평균 이윤</th>
               </tr>
@@ -437,11 +437,11 @@
           </table>
         </div>
         <div class="chart-wrapper">
-          <h3>세그먼트별 평균 이윤 비교</h3>
+          <h3>단계별 평균 이윤 비교</h3>
           <canvas id="menuProfitChart"></canvas>
           <p class="small-note">
-            Colab의 <code>price_menu_segments.csv</code>를 기반으로,
-            가격 민감도 구간별로 어떤 가격 메뉴가 가장 높은 기대 이윤을 만들어내는지 비교합니다.
+            저희가 설계한 알고리즘의 가격 차별 이론 기반 코드를 기반으로,
+            가격 민감도 구간별로 어떤 가격에서 가장 높은 기대 이윤을 만들어내는지 비교합니다.
           </p>
         </div>
       </div>
@@ -473,9 +473,7 @@
         <!-- JS에서 카드 생성 -->
       </div>
       <p class="small-note">
-        Colab 코드에서 계산된 지표(<code>roc_auc_score</code>, <code>accuracy_score</code>,
-        <code>precision_recall_fscore_support</code>, <code>mean_absolute_error</code>,
-        <code>mean_squared_error</code>)를 그대로 시각화합니다.
+        Colab 코드에서 계산된 지표를 그대로 시각화했습니다.
       </p>
     </section>
   </div>
@@ -830,3 +828,4 @@
   </script>
 </body>
 </html>
+
