@@ -295,7 +295,7 @@
           DNN-based Price Segmentation
         </span>
         <h1>가격 세분화 전략 모델 대시보드</h1>
-        <p>개별 고객의 구매 확률, 탄력성, 수익지표를 기반으로 한 <br>전략적 가격 세분화 결과를 한 페이지에서 확인할 수 있습니다.</p>
+        <p>개별 고객의 구매 확률, 탄력성, 수익지표를 기반으로 한 <br>전략적 가격 세분화 결과를 저희 페이지에서 확인해볼 수 있습니다</p>
       </div>
       <div class="header-right">
         <span>데이터 소스: Colab 시뮬레이션 출력</span>
@@ -309,8 +309,8 @@
         <div class="card-title-wrap">
           <h2>고객별 가격·구매 확률·탄력성 패널</h2>
           <div class="card-subtitle">
-            Colab 코드에서 생성한 <code>customer_price_elasticity_report.csv</code>를 기반으로,
-            각 고객의 제시 가격, 구매 확률, 탄력성, 기대 수익을 정리한 표입니다.
+            고객의 누적 구매 횟수, 연속 구매 횟수, 카트 빼기 횟수를 기반으로 분석을 통해
+            각 고객에게 제시된 차별 가격,그에 따른 구매 확률, 가격 탄력성, 기대 수익을 정리한 표입니다.
           </div>
         </div>
         <div class="pill">
@@ -332,15 +332,15 @@
         <table id="customerTable">
           <thead>
             <tr>
-              <th>customer_id</th>
-              <th>multi_purchase_count</th>
-              <th>total_purchase_last_month</th>
-              <th>cart_abandon_count</th>
-              <th>provided_price</th>
-              <th>purchase_probability</th>
-              <th>will_buy_075</th>
-              <th>elasticity</th>
-              <th>expected_revenue_prob</th>
+              <th>소비자 번호</th>
+              <th>연속 구매 횟수</th>
+              <th>누적 구매 횟수</th>
+              <th>카트 빼기 횟수</th>
+              <th>맞춤 가격</th>
+              <th>구매 확률</th>
+              <th>구매 여부</th>
+              <th>가격 탄력성</th>
+              <th>예상 수익</th>
             </tr>
           </thead>
           <tbody>
@@ -829,4 +829,5 @@
   </script>
 </body>
 </html>
+
 
