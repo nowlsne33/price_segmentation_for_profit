@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>가격 세분화 전략 모델 대시보드</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- PapaParse: CSV 파서 -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-card: rgba(15,23,42,0.96);
+      --border-subtle: rgba(30,64,175,0.4);
+      --accent: #60a5fa;
+      --accent-soft: rgba(96,165,250,0.16);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --good: #4ade80;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #000 100%);
+      color: var(--text-main);
+    }
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+    h1 {
+      font-size: 1.9rem;
+      margin-bottom: 0.25rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      margin: 0 0 0.8rem;
+    }
+    h3 {
+      font-size: 1.05rem;
+      margin: 0 0 0.5rem;
+    }
+    p {
+      margin: 0.25rem 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .layout-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 1rem;
+      margin-bottom: 1.3rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: radial-gradient(circle at top left, rgba(96,165,250,0.35), transparent 60%);
+    }
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    .header-right {
+      text-align: right;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .header-right span {
+      display: block;
+    }
+    .card {
+      background: radial-gradient(circle at top left, rgba(96,165,250,0.08), rgba(15,23,42,0.98));
+      border-radius: 1.3rem;
+      padding: 1.3rem 1.4rem;
+      margin-bottom: 1.3rem;
+      border: 1px solid rgba(148,163,184,0.25);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+      backdrop-filter: blur(16px);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+    .card-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.38);
+      color: var(--text-muted);
+    }
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    .pill-dot.red { background: var(--danger); }
+    .pill-dot.green { background: var(--good); }
+
+    .summary-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.6rem;
+    }
+    .summary-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .summary-stats span strong {
+      color: var(--text-main);
+    }
+
+    .summary-table-wrapper {
+      margin-top: 0.5rem;
+      border-radius: 0.9rem;
+      border: 1px solid rgba(15,23,42,0.9);
+      background: rgba(15,23,42,0.97);
+      max-height: 420px;
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    thead {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(to right, #020617, #030712);
+      z-index: 5;
+    }
+    th, td {
+      padding: 0.45rem 0.6rem;
+      text-align: right;
+      border-bottom: 1px solid rgba(15,23,42,0.92);
+      white-space: nowrap;
+    }
+    th {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    td:first-child, th:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: rgba(15,23,42,0.98);
+      z-index: 4;
+    }
+    tr:nth-child(even) td {
+      background: rgba(15,23,42,0.93);
+    }
+    tr:hover td {
+      background: rgba(30,64,175,0.35);
+    }
+
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+    @media (min-width: 960px) {
+      .grid-2 {
+        grid-template-columns: 2fr 1.1fr;
+      }
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    .chart-wrapper {
+      background: rgba(15,23,42,0.97);
+      border-radius: 0.9rem;
+      border: 1px solid rgba(15,23,42,0.9);
+      padding: 0.7rem 0.8rem;
+      min-height: 260px;
+    }
+    canvas {
+      width: 100% !important;
+      height: 230px !important;
+    }
+
+    .metric-grid {
+      display: grid;
+      gap: 0.7rem;
+    }
+    @media (min-width: 720px) {
+      .metric-grid {
+        grid-template-columns: repeat(3, minmax(0,1fr));
+      }
+    }
+    .metric-card {
+      background: rgba(15,23,42,0.97);
+      border-radius: 0.9rem;
+      border: 1px solid rgba(15,23,42,0.9);
+      padding: 0.7rem 0.8rem;
+      font-size: 0.8rem;
+    }
+    .metric-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.25rem;
+    }
+    .metric-title span.label {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+    .metric-title span.value {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .metric-extra {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .small-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+    }
+    .tag {
+      font-size: 0.72rem;
+      padding: 0.16rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.9);
+      color: var(--text-muted);
+    }
+
+    .menu-table-wrapper {
+      border-radius: 0.9rem;
+      border: 1px solid rgba(15,23,42,0.9);
+      background: rgba(15,23,42,0.97);
+      overflow: hidden;
+    }
+    .menu-table-wrapper table {
+      font-size: 0.8rem;
+    }
+    .menu-table-wrapper th, .menu-table-wrapper td {
+      padding: 0.4rem 0.55rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="layout-header">
+      <div>
+        <span class="badge">
+          <span class="badge-dot"></span>
+          DNN-based Price Segmentation
+        </span>
+        <h1>가격 세분화 전략 모델 대시보드</h1>
+        <p>개별 고객의 구매 확률, 탄력성, 수익지표를 기반으로 한 <br>전략적 가격 세분화 결과를 한 페이지에서 확인할 수 있습니다.</p>
+      </div>
+      <div class="header-right">
+        <span>데이터 소스: Colab 시뮬레이션 출력</span>
+        <span id="dataStatus">데이터 로딩 중…</span>
+      </div>
+    </header>
+
+    <!-- 섹션 1: 고객별 요약 테이블 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title-wrap">
+          <h2>고객별 가격·구매 확률·탄력성 패널</h2>
+          <div class="card-subtitle">
+            Colab 코드에서 생성한 <code>customer_price_elasticity_report.csv</code>를 기반으로,
+            각 고객의 제시 가격, 구매 확률, 탄력성, 기대 수익을 정리한 표입니다.
+          </div>
+        </div>
+        <div class="pill">
+          <span class="pill-dot"></span>
+          <span>per-customer panel</span>
+        </div>
+      </div>
+
+      <div class="summary-top">
+        <div class="summary-stats" id="summaryQuickStats">
+          <!-- JS에서 채움 -->
+        </div>
+        <div class="small-note">
+          상단 그래프와 동일한 데이터이며, 스크롤과 고정 열로 빠르게 탐색할 수 있습니다.
+        </div>
+      </div>
+
+      <div class="summary-table-wrapper">
+        <table id="customerTable">
+          <thead>
+            <tr>
+              <th>customer_id</th>
+              <th>multi_purchase_count</th>
+              <th>total_purchase_last_month</th>
+              <th>cart_abandon_count</th>
+              <th>provided_price</th>
+              <th>purchase_probability</th>
+              <th>will_buy_075</th>
+              <th>elasticity</th>
+              <th>expected_revenue_prob</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JS에서 채움 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 섹션 2: 개별 + 집계 곡선 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title-wrap">
+          <h2>가격–수요 곡선과 탄력성 분석</h2>
+          <div class="card-subtitle">
+            DNN이 예측한 구매 확률을 이용해 개별 고객 수준과 전체 수준에서
+            가격–구매 확률, 가격 탄력성, 총 이윤 곡선을 시각화합니다.
+          </div>
+        </div>
+        <div class="pill">
+          <span class="pill-dot green"></span>
+          <span>DNN propensity → elasticity</span>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="chart-wrapper">
+          <h3>제시 가격 vs. 구매 확률 (개별 고객)</h3>
+          <canvas id="custProbChart"></canvas>
+          <p class="small-note">
+            Colab 코드에서 <code>provided_price</code>와 <code>purchase_probability</code>를 이용해
+            “현재 가격에서의 수요 수준”을 시각화한 산점도입니다.
+          </p>
+        </div>
+        <div class="chart-wrapper">
+          <h3>제시 가격 vs. 탄력성 (개별 고객)</h3>
+          <canvas id="custElasticityChart"></canvas>
+          <p class="small-note">
+            동일한 고객 집합에 대해 가격 대비 탄력성을 표현합니다.
+            절대값이 큰 구간일수록 작은 가격 변화에 수요가 크게 반응합니다.
+          </p>
+        </div>
+      </div>
+
+      <div style="height: 0.8rem;"></div>
+
+      <div class="grid grid-3">
+        <div class="chart-wrapper">
+          <h3>집계 수요 곡선 (Q_mean)</h3>
+          <canvas id="aggDemandChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <h3>집계 가격 탄력성</h3>
+          <canvas id="aggElasticityChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <h3>총 기대 이윤 곡선</h3>
+          <canvas id="aggRevenueChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 섹션 3: 3단계 가격 메뉴 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title-wrap">
+          <h2>3-Tier 가격 메뉴 전략</h2>
+          <div class="card-subtitle">
+            Colab 코드 마지막 부분의 절대 탄력성 기준 tertile 분할(SEG0~2)과
+            각 세그먼트별 최적 메뉴 가격·평균 구매 확률·평균 이윤을 요약했습니다.
+          </div>
+        </div>
+        <div class="pill">
+          <span class="pill-dot"></span>
+          <span>elasticity-based 3-tier menu</span>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="menu-table-wrapper">
+          <table id="menuTable">
+            <thead>
+              <tr>
+                <th>Segment</th>
+                <th>고객 수</th>
+                <th>메뉴 가격</th>
+                <th>평균 구매확률</th>
+                <th>평균 이윤</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- JS에서 채움 -->
+            </tbody>
+          </table>
+        </div>
+        <div class="chart-wrapper">
+          <h3>세그먼트별 평균 이윤 비교</h3>
+          <canvas id="menuProfitChart"></canvas>
+          <p class="small-note">
+            Colab의 <code>price_menu_segments.csv</code>를 기반으로,
+            가격 민감도 구간별로 어떤 가격 메뉴가 가장 높은 기대 이윤을 만들어내는지 비교합니다.
+          </p>
+        </div>
+      </div>
+
+      <div class="tag-row">
+        <span class="tag">SEG0: 저탄력 고객 (가격 변화에 둔감)</span>
+        <span class="tag">SEG1: 중간 탄력 고객</span>
+        <span class="tag">SEG2: 고탄력 고객 (가격 변화에 민감)</span>
+      </div>
+    </section>
+
+    <!-- 섹션 4: 모델 정확도 카드 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title-wrap">
+          <h2>모델 정확도 진단 (RMSE, MAE 포함)</h2>
+          <div class="card-subtitle">
+            검증·테스트 세트에서의 AUC, ACC, 정밀도·재현율·F1과
+            확률 예측의 오차 수준을 나타내는 MAE, RMSE, Brier score를 요약합니다.
+          </div>
+        </div>
+        <div class="pill">
+          <span class="pill-dot green"></span>
+          <span>calibrated DNN performance</span>
+        </div>
+      </div>
+
+      <div class="metric-grid" id="metricGrid">
+        <!-- JS에서 카드 생성 -->
+      </div>
+      <p class="small-note">
+        Colab 코드에서 계산된 지표(<code>roc_auc_score</code>, <code>accuracy_score</code>,
+        <code>precision_recall_fscore_support</code>, <code>mean_absolute_error</code>,
+        <code>mean_squared_error</code>)를 그대로 시각화합니다.
+      </p>
+    </section>
+  </div>
+
+  <script>
+    // 간단 CSV 로더 (PapaParse 사용)
+    function loadCSV(path) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(path, {
+          download: true,
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve(results.data),
+          error: (err) => reject(err),
+        });
+      });
+    }
+
+    async function loadJSON(path) {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error("JSON 로딩 실패: " + path);
+      return res.json();
+    }
+
+    function toNumber(x) {
+      const v = parseFloat(x);
+      return isNaN(v) ? null : v;
+    }
+
+    // Chart.js 옵션 공통
+    function makeScatter(ctx, label, data, xLabel, yLabel) {
+      return new Chart(ctx, {
+        type: "scatter",
+        data: {
+          datasets: [{
+            label,
+            data,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            backgroundColor: "rgba(96,165,250,0.8)",
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            x: {
+              title: { display: true, text: xLabel },
+              grid: { color: "rgba(55,65,81,0.4)" },
+              ticks: { color: "#9ca3af", maxTicksLimit: 7 },
+            },
+            y: {
+              title: { display: true, text: yLabel },
+              grid: { color: "rgba(31,41,55,0.6)" },
+              ticks: { color: "#9ca3af", maxTicksLimit: 7 },
+            },
+          },
+        },
+      });
+    }
+
+    function makeLine(ctx, label, xVals, yVals, xLabel, yLabel) {
+      return new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: xVals,
+          datasets: [{
+            label,
+            data: yVals,
+            borderColor: "rgba(96,165,250,1)",
+            backgroundColor: "rgba(96,165,250,0.2)",
+            fill: true,
+            pointRadius: 0,
+            tension: 0.15,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              title: { display: true, text: xLabel },
+              grid: { color: "rgba(55,65,81,0.4)" },
+              ticks: { color: "#9ca3af", maxTicksLimit: 7 },
+            },
+            y: {
+              title: { display: true, text: yLabel },
+              grid: { color: "rgba(31,41,55,0.6)" },
+              ticks: { color: "#9ca3af", maxTicksLimit: 7 },
+            },
+          },
+        },
+      });
+    }
+
+    function makeBar(ctx, labels, values, yLabel) {
+      return new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: "mean_profit",
+            data: values,
+            backgroundColor: "rgba(96,165,250,0.75)",
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: "#9ca3af" },
+            },
+            y: {
+              title: { display: true, text: yLabel },
+              grid: { color: "rgba(31,41,55,0.6)" },
+              ticks: { color: "#9ca3af" },
+            },
+          },
+        },
+      });
+    }
+
+    async function initDashboard() {
+      const statusEl = document.getElementById("dataStatus");
+      try {
+        statusEl.textContent = "데이터 로딩 중…";
+
+        const [
+          customerPanel,
+          aggCurve,
+          menuSegments,
+          metrics,
+        ] = await Promise.all([
+          loadCSV("data/customer_price_elasticity_report.csv"),
+          loadCSV("data/aggregate_elasticity_curve.csv"),
+          loadCSV("data/price_menu_segments.csv"),
+          loadJSON("data/model_metrics.json"),
+        ]);
+
+        statusEl.textContent = "데이터 로딩 완료";
+
+        // 1) 고객 테이블
+        const tbody = document.querySelector("#customerTable tbody");
+        tbody.innerHTML = "";
+        customerPanel.forEach((row, idx) => {
+          const tr = document.createElement("tr");
+          const fields = [
+            "customer_id",
+            "multi_purchase_count",
+            "total_purchase_last_month",
+            "cart_abandon_count",
+            "provided_price",
+            "purchase_probability",
+            "will_buy_075",
+            "elasticity",
+            "expected_revenue_prob",
+          ];
+          fields.forEach((f) => {
+            const td = document.createElement("td");
+            let val = row[f];
+            if (f === "purchase_probability" || f === "elasticity") {
+              const num = toNumber(val);
+              val = num === null ? "" : num.toFixed(4);
+            }
+            if (f === "expected_revenue_prob") {
+              const num = toNumber(val);
+              val = num === null ? "" : num.toFixed(2);
+            }
+            if (f === "will_buy_075") {
+              val = row[f] === "1" || row[f] === 1 ? "1" : "0";
+            }
+            td.textContent = val;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+
+        // 상단 요약 통계 (간단하게)
+        if (customerPanel.length > 0) {
+          const nCustomers = customerPanel.length;
+          const avgProb = customerPanel.reduce((acc, r) => acc + (toNumber(r.purchase_probability) || 0), 0) / nCustomers;
+          const avgElasticity = customerPanel.reduce((acc, r) => acc + (toNumber(r.elasticity) || 0), 0) / nCustomers;
+          const buyRate = customerPanel.reduce((acc, r) => acc + ((r.will_buy_075 === "1" || r.will_buy_075 === 1) ? 1 : 0), 0) / nCustomers;
+
+          const statEl = document.getElementById("summaryQuickStats");
+          statEl.innerHTML = "";
+          const items = [
+            `고객 수: <strong>${nCustomers.toLocaleString()}</strong>`,
+            `평균 구매확률: <strong>${avgProb.toFixed(3)}</strong>`,
+            `평균 탄력성: <strong>${avgElasticity.toFixed(3)}</strong>`,
+            `P≥0.75 구매 고객 비율: <strong>${(buyRate * 100).toFixed(1)}%</strong>`,
+          ];
+          items.forEach((text) => {
+            const span = document.createElement("span");
+            span.innerHTML = text;
+            statEl.appendChild(span);
+          });
+        }
+
+        // 2) 개별 산점도
+        const custProbData = customerPanel
+          .map(r => ({
+            x: toNumber(r.provided_price),
+            y: toNumber(r.purchase_probability),
+          }))
+          .filter(pt => pt.x != null && pt.y != null);
+
+        const custElastData = customerPanel
+          .map(r => ({
+            x: toNumber(r.provided_price),
+            y: toNumber(r.elasticity),
+          }))
+          .filter(pt => pt.x != null && pt.y != null);
+
+        const probCtx = document.getElementById("custProbChart").getContext("2d");
+        makeScatter(probCtx,
+          "Provided price vs purchase probability",
+          custProbData,
+          "제시 가격",
+          "구매 확률"
+        );
+
+        const elastCtx = document.getElementById("custElasticityChart").getContext("2d");
+        makeScatter(elastCtx,
+          "Provided price vs elasticity",
+          custElastData,
+          "제시 가격",
+          "탄력성 (E)"
+        );
+
+        // 3) 집계 곡선
+        const aggPrice = aggCurve.map(r => toNumber(r.price));
+        const aggQMean = aggCurve.map(r => toNumber(r.Q_mean));
+        const aggE = aggCurve.map(r => toNumber(r.elasticity_meanQ));
+        const aggRev = aggCurve.map(r => toNumber(r.revenue_total));
+
+        const demandCtx = document.getElementById("aggDemandChart").getContext("2d");
+        makeLine(demandCtx,
+          "Q_mean",
+          aggPrice,
+          aggQMean,
+          "Price",
+          "Q_mean"
+        );
+
+        const aggElCtx = document.getElementById("aggElasticityChart").getContext("2d");
+        makeLine(aggElCtx,
+          "elasticity_meanQ",
+          aggPrice,
+          aggE,
+          "Price",
+          "Elasticity (E)"
+        );
+
+        const revCtx = document.getElementById("aggRevenueChart").getContext("2d");
+        makeLine(revCtx,
+          "revenue_total",
+          aggPrice,
+          aggRev,
+          "Price",
+          "Total revenue"
+        );
+
+        // 4) 3-tier 메뉴
+        const menuTbody = document.querySelector("#menuTable tbody");
+        menuTbody.innerHTML = "";
+        const segLabels = [];
+        const segMeanProfit = [];
+
+        menuSegments.forEach(row => {
+          const tr = document.createElement("tr");
+          const seg = row.segment;
+          const n = row.n_customers;
+          const price = row.menu_price;
+          const prob = toNumber(row.mean_prob);
+          const profit = toNumber(row.mean_profit);
+
+          segLabels.push(`SEG${seg}`);
+          segMeanProfit.push(profit);
+
+          const cells = [
+            `SEG${seg}`,
+            Number(n).toLocaleString(),
+            Number(price).toLocaleString(),
+            prob != null ? prob.toFixed(3) : "",
+            profit != null ? profit.toFixed(1) : "",
+          ];
+          cells.forEach(v => {
+            const td = document.createElement("td");
+            td.textContent = v;
+            tr.appendChild(td);
+          });
+          menuTbody.appendChild(tr);
+        });
+
+        const menuProfitCtx = document.getElementById("menuProfitChart").getContext("2d");
+        makeBar(menuProfitCtx, segLabels, segMeanProfit, "mean_profit");
+
+        // 5) 모델 정확도 카드
+        const metricGrid = document.getElementById("metricGrid");
+        metricGrid.innerHTML = "";
+
+        function addMetricCard(title, mainValue, expl, extra) {
+          const div = document.createElement("div");
+          div.className = "metric-card";
+          div.innerHTML = `
+            <div class="metric-title">
+              <span class="label">${title}</span>
+              <span class="value">${mainValue}</span>
+            </div>
+            <div class="metric-extra">${expl}</div>
+            ${extra ? `<div class="metric-extra">${extra}</div>` : ""}
+          `;
+          metricGrid.appendChild(div);
+        }
+
+        addMetricCard(
+          "Validation AUC / ACC",
+          `${metrics.val_auc.toFixed(3)} / ${metrics.val_acc.toFixed(3)}`,
+          "검증 세트에서의 ROC-AUC와 정확도. 분류기의 순위 판단력과 전반적인 분류 성능을 보여줍니다.",
+          `Precision=${metrics.val_prec.toFixed(3)}, Recall=${metrics.val_rec.toFixed(3)}, F1=${metrics.val_f1.toFixed(3)}`
+        );
+
+        addMetricCard(
+          "Test AUC / ACC",
+          `${metrics.test_auc.toFixed(3)} / ${metrics.test_acc.toFixed(3)}`,
+          "홀드아웃 테스트 세트 기준의 최종 성능으로, 과적합 여부를 확인하는 지표입니다.",
+          `Precision=${metrics.test_prec.toFixed(3)}, Recall=${metrics.test_rec.toFixed(3)}, F1=${metrics.test_f1.toFixed(3)}`
+        );
+
+        addMetricCard(
+          "확률 예측 오차 (MAE / RMSE)",
+          `${metrics.test_mae.toFixed(3)} / ${metrics.test_rmse.toFixed(3)}`,
+          "실제 라벨(0/1)과 예측 확률 사이의 평균 절대 오차와 RMS 오차. 값이 낮을수록 잘 보정된 확률입니다.",
+          `Brier score=${metrics.test_brier.toFixed(3)}`
+        );
+
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "데이터 로딩 오류: " + err.message;
+      }
+    }
+
+    initDashboard();
+  </script>
+</body>
+</html>
