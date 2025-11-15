@@ -10,6 +10,29 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <style>
+        .team-chip-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.45);
+      background: rgba(15,23,42,0.95);
+      font-size: 0.78rem;
+      margin-bottom: 0.35rem;
+    }
+    .team-chip-right .team-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    .header-right-small {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
     :root {
       --bg: #020617;
       --bg-card: rgba(15,23,42,0.96);
@@ -288,20 +311,32 @@
 </head>
 <body>
   <div class="page">
-    <header class="layout-header">
+        <header class="layout-header">
       <div>
         <span class="badge">
           <span class="badge-dot"></span>
           DNN-based Price Segmentation
         </span>
         <h1>가격 세분화 전략 모델 대시보드</h1>
-        <p>개별 고객의 구매 확률, 탄력성, 수익지표를 기반으로 한 <br>전략적 가격 세분화 결과를 저희 페이지에서 확인해볼 수 있습니다</p>
+        <p>
+          개별 고객의 구매 확률, 탄력성, 수익지표를 기반으로 한 <br />
+          전략적 가격 세분화 결과를 한 페이지에서 확인할 수 있습니다.
+        </p>
+
+        <!-- 팀원 이름 표시 -->
+        <div class="team-line">
+          <span class="team-name-chip">
+            <span class="team-dot"></span>
+            <span>Team: 노지원 · 홍길동 · 김OO · 이OO</span>
+          </span>
+        </div>
       </div>
       <div class="header-right">
         <span>데이터 소스: Colab 시뮬레이션 출력</span>
         <span id="dataStatus">데이터 로딩 중…</span>
       </div>
     </header>
+
 
     <!-- 섹션 1: 고객별 요약 테이블 -->
     <section class="card">
@@ -829,6 +864,7 @@
   </script>
 </body>
 </html>
+
 
 
 
