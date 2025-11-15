@@ -339,7 +339,7 @@
     <section class="card">
       <div class="card-header">
         <div class="card-title-wrap">
-          <h2>고객별 가격·구매 확률·탄력성 패널 (완전 가격 차별)</h2>
+          <h2>고객별 가격·구매 확률·탄력성 패널</h2>
           <div class="card-subtitle">
             고객의 누적 구매 횟수, 연속 구매 횟수, 카트 빼기 횟수를 기반으로 분석을 통해
             각 고객에게 제시된 차별 가격, 그에 따른 구매 확률, 가격 탄력성, 기대 수익을 정리한 표입니다.
@@ -456,7 +456,7 @@
           <table id="menuTable">
             <thead>
               <tr>
-                <th>분류</th>
+                <th>세그멘트</th>
                 <th>고객 수</th>
                 <th>상품 가격</th>
                 <th>평균 구매확률</th>
@@ -469,11 +469,11 @@
           </table>
         </div>
         <div class="chart-wrapper">
-          <h3>등급별 평균 이윤 비교</h3>
+          <h3>세그멘트별 평균 이윤 비교</h3>
           <canvas id="menuProfitChart"></canvas>
           <p class="small-note">
-            가격 차별 이론 적용 기반 분석을 기반으로,
-            가격 민감도 등급별로 어떤 메뉴가 가장 높은 기대 이윤을 만들어내는지 비교합니다.
+            모델 내 정의된 세그멘트트 분류 함수를 기반으로,
+            가격 민감도 분류별로 어떤 상품이 가장 높은 기대 이윤을 만들어내는지 비교합니다.
           </p>
         </div>
       </div>
@@ -859,6 +859,7 @@
   </script>
 </body>
 </html>
+
 
 
 
